@@ -54,12 +54,27 @@ contract EMIManager is AutomationCompatibleInterface {
         agreementCount++;
     }
 
-    function calculateEMI(uint principal, uint interestRate, uint months) 
-        public pure returns (uint) {
-        uint monthlyInterest = interestRate / 12 / 100;
-        uint factor = (monthlyInterest * (1 + monthlyInterest)**months) / 
-                     ((1 + monthlyInterest)**months - 1);
-        return principal * factor;
+    function calculateEMI(uint256 principal, uint256 annualInterestRate, uint256 months) 
+        public pure returns (uint256) {
+        // Using higher precision for calculations (1e27)
+        uint256 PRECISION = 1e27;
+        
+        // Convert annual rate to monthly rate with precision
+        // For 12% annual, monthly rate = 0.12 / 12 = 0.01
+        uint256 monthlyRate = (annualInterestRate * PRECISION) / (12 * 10000);
+        
+        // Calculate (1 + r)^n
+        uint256 onePlusR = PRECISION + monthlyRate;
+        uint256 powFactor = onePlusR;
+        for(uint256 i = 1; i < months; i++) {
+            powFactor = (powFactor * onePlusR) / PRECISION;
+        }
+        
+        // EMI = P * r * (1 + r)^n / ((1 + r)^n - 1)
+        uint256 numerator = principal * monthlyRate * powFactor;
+        uint256 denominator = (powFactor - PRECISION) * PRECISION;
+        
+        return numerator / denominator;
     }
 
     function checkUpkeep(bytes calldata) external view override 
