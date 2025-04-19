@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;  // Keep this at 0.8.0 for Chainlink compatibility
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
