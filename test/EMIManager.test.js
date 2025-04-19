@@ -70,7 +70,7 @@ describe("EMIManager", function () {
     let updatedAgreement = await emiManager.agreements(0);
     expect(updatedAgreement.paymentsMade).to.equal(1);
     expect(updatedAgreement.nextPaymentDue).to.equal(
-      BigInt(agreement.nextPaymentDue) + BigInt(30 * 24 * 3600)
+      BigInt(agreement.nextPaymentDue) + BigInt(120) // 2 minutes in seconds
     );
 
     for (let i = 1; i < 12; i++) {
@@ -144,7 +144,7 @@ describe("EMIManager", function () {
       if (needed) await emiManager.performUpkeep(data);
       
       expect(await emiManager.getNextDueDate(0)).to.equal(
-        BigInt(agreement.nextPaymentDue) + BigInt(30 * 24 * 3600)
+        BigInt(agreement.nextPaymentDue) + BigInt(120) // 2 minutes in seconds
       );
     });
 

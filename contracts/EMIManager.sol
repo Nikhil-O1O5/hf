@@ -21,6 +21,9 @@ contract EMIManager is AutomationCompatibleInterface {
     Agreement[] public agreements;
     uint public agreementCount;
     
+    // Time period between payments - changed to 2 minutes for testing
+    uint256 public constant PAYMENT_INTERVAL = 2 minutes;
+    
     event AgreementCreated(uint agreementId);
     event PaymentExecuted(uint agreementId, uint amount);
     event AgreementCompleted(uint agreementId);
@@ -45,7 +48,7 @@ contract EMIManager is AutomationCompatibleInterface {
             interestRate: interestRate,
             months: months,
             startTime: startTime,
-            nextPaymentDue: startTime + 30 days,
+            nextPaymentDue: startTime + PAYMENT_INTERVAL, // Changed from 30 days to PAYMENT_INTERVAL
             paymentsMade: 0,
             isActive: true
         }));
@@ -102,7 +105,7 @@ contract EMIManager is AutomationCompatibleInterface {
         token.transferFrom(agreement.borrower, agreement.lender, agreement.emiAmount);
         
         agreement.paymentsMade++;
-        agreement.nextPaymentDue += 30 days;
+        agreement.nextPaymentDue += PAYMENT_INTERVAL; // Changed from 30 days to PAYMENT_INTERVAL
         
         if(agreement.paymentsMade >= agreement.months) {
             agreement.isActive = false;
