@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;  // Keep this at 0.8.0 for Chainlink compatibility
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -110,5 +109,133 @@ contract EMIManager is AutomationCompatibleInterface {
         }
         
         emit PaymentExecuted(agreementId, agreement.emiAmount);
+    }
+
+    // Borrower Specific Functions
+    function getRemainingEMIs(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        if (!agreement.isActive) {
+            return 0;
+        }
+        
+        if (agreement.months <= agreement.paymentsMade) {
+            return 0;
+        }
+        
+        return agreement.months - agreement.paymentsMade;
+    }
+    
+    function getNextDueDate(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        require(agreement.isActive, "Agreement is not active");
+        
+        return agreement.nextPaymentDue;
+    }
+    
+    function getCurrentEMIAmount(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        require(agreement.isActive, "Agreement is not active");
+        
+        return agreement.emiAmount;
+    }
+    
+    function getTotalAmountPaid(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        return agreement.paymentsMade * agreement.emiAmount;
+    }
+    
+    function getTotalAmountRemaining(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        if (!agreement.isActive) {
+            return 0;
+        }
+        
+        uint remainingPayments = 0;
+        if (agreement.months > agreement.paymentsMade) {
+            remainingPayments = agreement.months - agreement.paymentsMade;
+        }
+        
+        return remainingPayments * agreement.emiAmount;
+    }
+    
+    // Lender Specific Functions
+    function getLenderTotalAmountPaid(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        return agreement.paymentsMade * agreement.emiAmount;
+    }
+    
+    function getLenderTotalAmountRemaining(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        if (!agreement.isActive) {
+            return 0;
+        }
+        
+        uint remainingPayments = 0;
+        if (agreement.months > agreement.paymentsMade) {
+            remainingPayments = agreement.months - agreement.paymentsMade;
+        }
+        
+        return remainingPayments * agreement.emiAmount;
+    }
+    
+    function getLenderRemainingMonths(uint agreementId) external view returns (uint) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        if (!agreement.isActive) {
+            return 0;
+        }
+        
+        if (agreement.months <= agreement.paymentsMade) {
+            return 0;
+        }
+        
+        return agreement.months - agreement.paymentsMade;
+    }
+
+    // Helper function to get full agreement details
+    function getAgreementDetails(uint agreementId) external view returns (
+        address lender,
+        address borrower,
+        address token,
+        uint totalAmount,
+        uint emiAmount,
+        uint interestRate,
+        uint months,
+        uint startTime,
+        uint nextPaymentDue,
+        uint paymentsMade,
+        bool isActive
+    ) {
+        require(agreementId < agreements.length, "Invalid agreement ID");
+        Agreement storage agreement = agreements[agreementId];
+        
+        return (
+            agreement.lender,
+            agreement.borrower,
+            agreement.token,
+            agreement.totalAmount,
+            agreement.emiAmount,
+            agreement.interestRate,
+            agreement.months,
+            agreement.startTime,
+            agreement.nextPaymentDue,
+            agreement.paymentsMade,
+            agreement.isActive
+        );
     }
 }
