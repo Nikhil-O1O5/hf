@@ -11,7 +11,7 @@ const privateKey =
 const wallet = new ethers.Wallet(privateKey, provider);
 
 // Your deployed contract address
-const contractAddress = "0x1FAEF3b563821A3ADA3BaC3c3aFD48Eb3147a0dd";
+const contractAddress = "0xAA0B751E243C6859bC09ea5B86804f8B2368D47f";
 
 // Paste your ABI here
 const abi = [
@@ -477,7 +477,9 @@ const contract = new ethers.Contract(contractAddress, abi, wallet);
 
 async function getAgreementDetails(id) {
   const details = await contract.getAgreementDetails(id);
+  const remainingEMIs = await contract.getRemainingEMIs(id);
   console.log("Agreement Details:", details);
+  console.log("Remaining EMIs:", remainingEMIs.toString());
 }
 
-getAgreementDetails(1);
+getAgreementDetails(0);

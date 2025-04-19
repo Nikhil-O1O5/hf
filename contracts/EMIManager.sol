@@ -45,7 +45,7 @@ contract EMIManager is AutomationCompatibleInterface {
             interestRate: interestRate,
             months: months,
             startTime: startTime,
-            nextPaymentDue: startTime + 30 days,
+            nextPaymentDue: startTime + 2 minutes,  // Set payment due every 2 minutes
             paymentsMade: 0,
             isActive: true
         }));
@@ -102,7 +102,7 @@ contract EMIManager is AutomationCompatibleInterface {
         token.transferFrom(agreement.borrower, agreement.lender, agreement.emiAmount);
         
         agreement.paymentsMade++;
-        agreement.nextPaymentDue += 30 days;
+        agreement.nextPaymentDue += 2 minutes;  // Set payment due every 2 minutes
         
         if(agreement.paymentsMade >= agreement.months) {
             agreement.isActive = false;
@@ -206,6 +206,33 @@ contract EMIManager is AutomationCompatibleInterface {
         }
         
         return agreement.months - agreement.paymentsMade;
+    }
+
+function updatePaymentStatus(uint agreementId) external {
+        Agreement storage agreement = agreements[agreementId];
+        require(agreement.isActive, "Agreement inactive");
+        require(msg.sender == agreement.borrower, "Only borrower can update");
+        require(block.timestamp >= agreement.nextPaymentDue, "Payment not due yet");
+        
+        IERC20 token = IERC20(agreement.token);
+        
+        // Verify the transfer has occurred
+        uint lenderBalance = token.balanceOf(agreement.lender);
+        require(
+            lenderBalance >= agreement.emiAmount,
+            "EMI payment not received"
+        );
+        
+        // Update agreement state
+        agreement.paymentsMade++;
+        agreement.nextPaymentDue += 2 minutes;
+        
+        if(agreement.paymentsMade >= agreement.months) {
+            agreement.isActive = false;
+            emit AgreementCompleted(agreementId);
+        }
+        
+        emit PaymentExecuted(agreementId, agreement.emiAmount);
     }
 
     // Helper function to get full agreement details
